@@ -9,9 +9,10 @@ import { Expand, Minimize } from "lucide-react";
 
 export default function HomePage() {
   const [videoUrl, setVideoUrl] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [wallpaperUrl, setWallpaperUrl] = useState(""); // Stores the processed URL for the player
   const [wallpaperImage, setWallpaperImage] = useState<string | null>(null); // Stores data URL for image preview
+  const [wallpaperVideo, setWallpaperVideo] = useState<string | null>(null); // Stores the video URL for the player
   const [hasAttemptedCreate, setHasAttemptedCreate] = useState(false);
   const [playerOpacity, setPlayerOpacity] = useState(0.75);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -57,12 +58,12 @@ export default function HomePage() {
       const embedUrl = convertToEmbedUrl(videoUrl);
       setWallpaperUrl(embedUrl);
 
-      if (imageFile) {
+      if (selectedFile && selectedFile.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onloadend = () => {
           setWallpaperImage(reader.result as string);
         };
-        reader.readAsDataURL(imageFile);
+        reader.readAsDataURL(selectedFile);
       } else {
         setWallpaperImage(null); // Clear image if none selected in this attempt
       }
@@ -134,7 +135,7 @@ export default function HomePage() {
 
           <div className="space-y-2">
             <Label htmlFor="imageFileButton" className="text-xl font-semibold">
-              2. Select Background Image
+              2. Select Background Image or local video
             </Label>
             <div className="flex items-center gap-3">
               <Button
@@ -147,20 +148,47 @@ export default function HomePage() {
                 Choose File
               </Button>
               <span className="text-sm text-muted-foreground truncate flex-grow min-w-0">
-                {imageFile ? imageFile.name : "No file selected"}
+                {selectedFile ? selectedFile.name : "No file selected"}
               </span>
             </div>
             <Input
               ref={fileInputRef}
               id="imageFileHidden" // Added id for potential label association if needed elsewhere
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               className="hidden"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) {
-                  setImageFile(e.target.files[0]);
+                  const file = e.target.files[0];
+                  setSelectedFile(file); // Always set selectedFile for both image and video
+                  if (file.type.startsWith("video/")) {
+                    // Always revoke previous object URL before creating a new one
+                    if (
+                      typeof wallpaperVideo === "string" &&
+                      wallpaperVideo.startsWith("blob:")
+                    ) {
+                      URL.revokeObjectURL(wallpaperVideo);
+                    }
+                    const videoUrl = URL.createObjectURL(file);
+                    setWallpaperVideo(videoUrl);
+                    setWallpaperImage(null); // Clear image if a video is selected
+                  } else if (file.type.startsWith("image/")) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setWallpaperImage(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                    setWallpaperVideo(null); // Clear video if an image is selected
+                  }
                 } else {
-                  setImageFile(null);
+                  setSelectedFile(null);
+                  if (
+                    typeof wallpaperVideo === "string" &&
+                    wallpaperVideo.startsWith("blob:")
+                  ) {
+                    URL.revokeObjectURL(wallpaperVideo);
+                  }
+                  setWallpaperVideo(null); // Clear video if no file is selected
                 }
                 setHasAttemptedCreate(false);
               }}
@@ -210,6 +238,41 @@ export default function HomePage() {
               : { backgroundColor: "#2d3748" }
           } // Darker default bg
         >
+          {/* local video as wallpaper */}
+          <div className="absolute top-0 left-0 w-full h-full">
+            {wallpaperVideo && (
+              <video
+                key={wallpaperVideo + (wallpaperImage || "noimg")}
+                width="100%"
+                height="100%"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute top-0 left-0 w-full h-full object-cover z-0"
+                onError={(e) => {
+                  const target = e.target as HTMLVideoElement;
+                  target.poster = "";
+                  target.style.display = "none";
+                  const msg = document.createElement("div");
+                  msg.textContent = "Failed to load video wallpaper.";
+                  msg.className =
+                    "absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/60 text-white z-10";
+                  target.parentElement?.appendChild(msg);
+                }}
+              >
+                <source
+                  src={wallpaperVideo}
+                  type={
+                    selectedFile
+                      ? selectedFile.type
+                      : `video/${wallpaperVideo.split(".").pop()?.split("?")[0]}`
+                  }
+                />
+                Your browser does not support the video tag.
+              </video>
+            )}
+          </div>
           {wallpaperUrl && isFsButtonVisible && (
             <Button
               onClick={toggleFullScreen}
