@@ -10,7 +10,7 @@ import { Expand, Minimize } from "lucide-react";
 export default function HomePage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [wallpaperUrl, setWallpaperUrl] = useState(""); // Stores the processed URL for the player
+  const [playVideoUrl, setPlayVideoUrl] = useState(""); // Stores the processed URL for the player
   const [wallpaperImage, setWallpaperImage] = useState<string | null>(null); // Stores data URL for image preview
   const [wallpaperVideo, setWallpaperVideo] = useState<string | null>(null); // Stores the video URL for the player
   const [hasAttemptedCreate, setHasAttemptedCreate] = useState(false);
@@ -52,24 +52,14 @@ export default function HomePage() {
     return ""; // Fallback for unrecognised or non-HTTPS URLs
   };
 
-  const handleCreateWallpaper = () => {
+  const handleCreateVideoPlayer = () => {
     setHasAttemptedCreate(true);
     if (videoUrl) {
       const embedUrl = convertToEmbedUrl(videoUrl);
-      setWallpaperUrl(embedUrl);
-
-      if (selectedFile && selectedFile.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setWallpaperImage(reader.result as string);
-        };
-        reader.readAsDataURL(selectedFile);
-      } else {
-        setWallpaperImage(null); // Clear image if none selected in this attempt
-      }
+      setPlayVideoUrl(embedUrl);
     } else {
       // No video URL provided
-      setWallpaperUrl("");
+      setPlayVideoUrl("");
       setWallpaperImage(null); // Clear image as well
     }
   };
@@ -132,6 +122,13 @@ export default function HomePage() {
               className="w-full"
             />
           </div>
+          <Button
+            className="w-full" // Added pt-6 for more space above this button
+            onClick={handleCreateVideoPlayer}
+            disabled={!videoUrl}
+          >
+            PLAY
+          </Button>
 
           <div className="space-y-2">
             <Label htmlFor="imageFileButton" className="text-xl font-semibold">
@@ -180,6 +177,7 @@ export default function HomePage() {
                     reader.readAsDataURL(file);
                     setWallpaperVideo(null); // Clear video if an image is selected
                   }
+                  // Do NOT clear playVideoUrl here, so YouTube/video URL stays active
                 } else {
                   setSelectedFile(null);
                   if (
@@ -189,19 +187,13 @@ export default function HomePage() {
                     URL.revokeObjectURL(wallpaperVideo);
                   }
                   setWallpaperVideo(null); // Clear video if no file is selected
+                  // Do NOT clear playVideoUrl here
                 }
                 setHasAttemptedCreate(false);
               }}
             />
           </div>
 
-          <Button
-            className="w-full" // Added pt-6 for more space above this button
-            onClick={handleCreateWallpaper}
-            disabled={!videoUrl}
-          >
-            Create Wallpaper
-          </Button>
           <div className="mt-6">
             <label
               htmlFor="opacity-slider"
@@ -227,19 +219,16 @@ export default function HomePage() {
           className={`border rounded-lg shadow-md bg-muted overflow-hidden ${isFullScreen ? "fixed inset-0 z-50 w-screen h-screen max-w-none" : "w-full max-w-2xl aspect-video flex items-center justify-center relative"}`}
           onMouseEnter={handlePlayerMouseEnter}
           onMouseLeave={handlePlayerMouseLeave}
-          style={
-            wallpaperImage
-              ? {
-                  backgroundImage: `url(${wallpaperImage})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                }
-              : { backgroundColor: "#2d3748" }
-          } // Darker default bg
         >
-          {/* local video as wallpaper */}
+          {/* Wallpaper: image or local video */}
           <div className="absolute top-0 left-0 w-full h-full">
+            {wallpaperImage && (
+              <img
+                src={wallpaperImage}
+                alt="Wallpaper"
+                className="absolute top-0 left-0 w-full h-full object-cover z-0"
+              />
+            )}
             {wallpaperVideo && (
               <video
                 key={wallpaperVideo + (wallpaperImage || "noimg")}
@@ -273,15 +262,31 @@ export default function HomePage() {
               </video>
             )}
           </div>
-          {wallpaperUrl && isFsButtonVisible && (
+          {/* YouTube or remote video iframe (always rendered if playVideoUrl) */}
+          {playVideoUrl &&
+            (playVideoUrl.match(/youtube|vimeo|\/embed\//i) ? (
+              <iframe
+                key={playVideoUrl + (wallpaperImage || "noimg")}
+                width="100%"
+                height="100%"
+                src={playVideoUrl}
+                title="Wallpaper Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full z-10"
+                style={{ opacity: playerOpacity }}
+              ></iframe>
+            ) : null)}
+          {playVideoUrl && isFsButtonVisible && (
             <Button
               onClick={toggleFullScreen}
               variant="outline"
-              size="icon" // Changed to icon size
+              size="icon"
               className={`absolute top-3 right-3 z-20 transition-opacity duration-300 ${isFsButtonVisible ? "opacity-100" : "opacity-0"} ${isFullScreen ? "bg-black/50 hover:bg-black/70 text-white" : "bg-white/50 hover:bg-white/70 text-black"}`}
-              onMouseEnter={handlePlayerMouseEnter} // Keep button visible if mouse is over it
-              onMouseLeave={handlePlayerMouseLeave} // Restart timer if mouse leaves button itself
-              aria-label={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"} // Accessibility
+              onMouseEnter={handlePlayerMouseEnter}
+              onMouseLeave={handlePlayerMouseLeave}
+              aria-label={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
             >
               {isFullScreen ? (
                 <Minimize className="h-4 w-4" />
@@ -290,8 +295,9 @@ export default function HomePage() {
               )}
             </Button>
           )}
+          {/* Error and placeholder handling */}
           {(() => {
-            if (hasAttemptedCreate && videoUrl && !wallpaperUrl) {
+            if (hasAttemptedCreate && videoUrl && !playVideoUrl) {
               return (
                 <p className="text-red-400 z-10 bg-gray-800/90 rounded-md text-center">
                   Unsupported video URL or format. <br /> Please use a valid
@@ -299,53 +305,14 @@ export default function HomePage() {
                 </p>
               );
             }
-            if (wallpaperUrl) {
-              const isDirectVideo =
-                wallpaperUrl.match(/\.(mp4|webm|ogg)(\?.*)?$/i) != null;
-              if (isDirectVideo) {
-                return (
-                  <video
-                    key={wallpaperUrl + (wallpaperImage || "noimg")}
-                    width="100%"
-                    height="100%"
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                    className="absolute top-0 left-0 w-full h-full object-cover z-0"
-                    style={{ opacity: playerOpacity }}
-                  >
-                    <source
-                      src={wallpaperUrl}
-                      type={`video/${wallpaperUrl.split(".").pop()?.split("?")[0]}`}
-                    />
-                    Your browser does not support the video tag.
-                  </video>
-                );
-              } else {
-                // Assumed embeddable link like YouTube or other platform that provides direct embed URL
-                return (
-                  <iframe
-                    key={wallpaperUrl + (wallpaperImage || "noimg")}
-                    width="100%"
-                    height="100%"
-                    src={wallpaperUrl}
-                    title="Wallpaper Video"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="absolute top-0 left-0 w-full h-full z-0"
-                    style={{ opacity: playerOpacity }}
-                  ></iframe>
-                );
-              }
+            if (!playVideoUrl && !wallpaperImage && !wallpaperVideo) {
+              return (
+                <p className="text-muted-foreground z-10">
+                  Audio-Visual Wallpaper Display Area
+                </p>
+              );
             }
-            // Default placeholder
-            return (
-              <p className="text-muted-foreground z-10">
-                Audio-Visual Wallpaper Display Area
-              </p>
-            );
+            return null;
           })()}
         </div>
       </main>
