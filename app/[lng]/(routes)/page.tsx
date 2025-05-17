@@ -1,168 +1,269 @@
-import AnimatedTitle from "@/components/common/AnimatedTitle";
-import { LatestBlogs } from "@/app/[lng]/(routes)/components/LatestBlogs";
-import { homepageData } from "@/data/homepage";
-import { handleTranslation } from "@/app/i18n/index";
-import { Metadata } from "next";
-// export const metadata: Metadata = {
-//   title: "Home",
-//   description: "A Website",
-// };
+"use client";
 
-type Params = Promise<{ lng: string }>;
-export async function generateMetadata({
-  params,
-}: {
-  params: Params;
-}): Promise<Metadata> {
-  const { lng } = await params;
-  const { t } = await handleTranslation(lng, "homepage");
+import React, { useState, useRef, useEffect } from "react";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Expand, Minimize } from "lucide-react";
 
-  const image = {
-    url: "/images/profile-image.jpg",
-    alt: "My Website",
-    width: 800,
-    height: 600,
-    type: "image/jpeg",
+export default function HomePage() {
+  const [videoUrl, setVideoUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [wallpaperUrl, setWallpaperUrl] = useState(""); // Stores the processed URL for the player
+  const [wallpaperImage, setWallpaperImage] = useState<string | null>(null); // Stores data URL for image preview
+  const [hasAttemptedCreate, setHasAttemptedCreate] = useState(false);
+  const [playerOpacity, setPlayerOpacity] = useState(0.75);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isFsButtonVisible, setIsFsButtonVisible] = useState(false);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const hideButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const convertToEmbedUrl = (url: string): string => {
+    if (!url) return "";
+
+    // YouTube URL regex (handles various formats)
+    const youtubeRegex =
+      /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const youtubeMatch = url.match(youtubeRegex);
+    if (youtubeMatch && youtubeMatch[1]) {
+      const videoId = youtubeMatch[1];
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+    }
+
+    // Check for image files (which are not videos)
+    if (url.match(/\.(jpeg|jpg|gif|png)(\?.*)?$/i)) {
+      return ""; // Invalid video source
+    }
+
+    // Check for direct video files
+    if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+      return url; // Use direct URL for <video> tag
+    }
+
+    // If it's an HTTPS URL but not matched above, it might be a different embeddable link or direct video
+    // For simplicity, we'll return it and let the browser try. More robust parsing for Vimeo, etc., could be added.
+    if (url.startsWith("https://")) {
+      return url;
+    }
+
+    return ""; // Fallback for unrecognised or non-HTTPS URLs
   };
 
-  return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || ""),
-    title: t("title"),
-    description: t("description"),
-    openGraph: {
-      title: t("title"),
-      description: t("description"),
-      images: [image],
-    },
-  };
-}
+  const handleCreateWallpaper = () => {
+    setHasAttemptedCreate(true);
+    if (videoUrl) {
+      const embedUrl = convertToEmbedUrl(videoUrl);
+      setWallpaperUrl(embedUrl);
 
-export default async function Page({ params }: { params: Params }) {
-  const { lng } = await params;
-  const { t } = await handleTranslation(lng, "homepage");
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setWallpaperImage(reader.result as string);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        setWallpaperImage(null); // Clear image if none selected in this attempt
+      }
+    } else {
+      // No video URL provided
+      setWallpaperUrl("");
+      setWallpaperImage(null); // Clear image as well
+    }
+  };
+
+  const toggleFullScreen = () => {
+    setIsFullScreen((prev) => !prev);
+  };
+
+  const handlePlayerMouseEnter = () => {
+    if (hideButtonTimerRef.current) {
+      clearTimeout(hideButtonTimerRef.current);
+      hideButtonTimerRef.current = null;
+    }
+    setIsFsButtonVisible(true);
+  };
+
+  const handlePlayerMouseLeave = () => {
+    hideButtonTimerRef.current = setTimeout(() => {
+      setIsFsButtonVisible(false);
+    }, 3000); // Hide after 3 seconds
+  };
+
+  useEffect(() => {
+    // Cleanup timer on component unmount
+    return () => {
+      if (hideButtonTimerRef.current) {
+        clearTimeout(hideButtonTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="justify-center items-center m-auto p-5 md:p-0 dark:text-white">
-      {/* Introduce */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 md:max-w-6xl m-auto md:py-24 w-full">
-        <div className="col-span-1 sm:col-span-2">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 md:max-w-xl md:min-h-[180px] min-h-[120px] dark:text-white">
-            <AnimatedTitle
-              sequences={homepageData.intro.title.sequences.flatMap(([key]) => [
-                t(key),
-                1000,
-              ])}
-              speed={homepageData.intro.title.speed}
-            />
-          </h1>
-          <h2 className="md:max-w-2xl dark:text-gray-300">
-            {t(homepageData.intro.description)}
-          </h2>
-          <div className="mt-8">
-            <a
-              href="/about"
-              className="inline-flex items-center px-6 py-3 text-lg font-medium text-white bg-black dark:bg-gray-800 rounded-full hover:bg-gray-800 dark:hover:bg-gray-700 hover:scale-105 transition-colors transition-all duration-300 group"
-            >
-              {t(homepageData.intro.aboutButton)}
-              <svg
-                className="w-5 h-5 ml-2 transition-transform duration-300 transform group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                />
-              </svg>
-            </a>
-          </div>
-        </div>
-        {/* Profile image */}
-        <div className="col-span-1 m-auto p-4">
-          <div className="relative w-full h-full aspect-square">
-            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-            <div className="relative w-full h-full overflow-hidden">
-              <div className="w-full h-full rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%] overflow-hidden p-1 transition-all duration-700">
-                <img
-                  src={homepageData.intro.profileImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover hover:scale-110 transition-all duration-700"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="container mx-auto p-4">
+      <header className="text-center my-8">
+        <h1 className="text-4xl font-bold">🎧 Cool Audio Player</h1>
+        <p className="text-xl text-muted-foreground mt-2">
+          Turn any video into an immersive, visually engaging wallpaper
+          experience.
+        </p>
+      </header>
 
-      <div className="mx-auto">
-        {/* Work Section - Masonry-style layout with hover effects */}
-        <section className="py-20 md:max-w-6xl m-auto">
-          <h2 className="text-4xl font-bold mb-10 relative inline-block dark:text-white">
-            {t(homepageData.selection.title)}
-            <div className="absolute -bottom-2 left-0 w-1/2 h-1 bg-black dark:bg-white transform origin-left transition-all duration-300 ease-out hover:w-full"></div>
+      <main className="flex flex-col items-center gap-8">
+        {/* Placeholder for Video URL Input */}
+        <div className="w-full max-w-md p-6 border rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-4">1. Enter Video URL</h2>
+          <input
+            type="text"
+            placeholder="e.g., YouTube, Vimeo, .mp4, .webm"
+            className="w-full p-2 border rounded mb-4"
+            value={videoUrl}
+            onChange={(e) => {
+              setVideoUrl(e.target.value);
+              setHasAttemptedCreate(false); // Reset attempt status on new input
+            }}
+          />
+          {/* Placeholder for Image Selection */}
+          <h2 className="text-2xl font-semibold mb-4 mt-6">
+            2. Select Background Image
           </h2>
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-            {homepageData.selection.items.map((item, index) => (
-              <div
-                key={index}
-                className={`group relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 p-1 transition-all duration-300 hover:scale-[1.02] break-inside-avoid grayscale-[0.8] hover:grayscale-0 ${(index + 1) % 3 === 0 ? "min-h-[500px]" : "min-h-[350px]"} min-h-[200px]`}
-                style={{
-                  backgroundImage: `url(${item.imgUrl})`,
+          <input
+            type="file"
+            accept="image/*"
+            className="w-full p-2 border rounded"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setImageFile(e.target.files[0]);
+              } else {
+                setImageFile(null);
+              }
+              setHasAttemptedCreate(false); // Reset attempt status
+            }}
+          />
+          <button
+            className="mt-6 w-full bg-primary text-primary-foreground p-2 rounded hover:bg-primary/90"
+            onClick={handleCreateWallpaper}
+            disabled={!videoUrl} // Optionally disable if no URL
+          >
+            Create Wallpaper
+          </button>
+          <div className="mt-6">
+            <label
+              htmlFor="opacity-slider"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
+              Player Opacity: {Math.round(playerOpacity * 100)}%
+            </label>
+            <Slider
+              id="opacity-slider"
+              defaultValue={[0.75]}
+              min={0}
+              max={1}
+              step={0.01}
+              value={[playerOpacity]}
+              onValueChange={(value) => setPlayerOpacity(value[0])}
+              className="w-full"
+            />
+          </div>
+        </div>
+
+        {/* Player Display */}
+        <div
+          ref={playerContainerRef}
+          className={`border rounded-lg shadow-md bg-muted overflow-hidden ${isFullScreen ? "fixed inset-0 z-50 w-screen h-screen max-w-none p-0" : "w-full max-w-2xl aspect-video flex items-center justify-center p-6 relative"}`}
+          onMouseEnter={handlePlayerMouseEnter}
+          onMouseLeave={handlePlayerMouseLeave}
+          style={
+            wallpaperImage
+              ? {
+                  backgroundImage: `url(${wallpaperImage})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
-                }}
-              >
-                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/20 transition-all duration-300"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white transform translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
-                  <h3 className="text-2xl font-bold mb-2">{t(item.title)}</h3>
-                  <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                    {t(item.description)}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+                  backgroundRepeat: "no-repeat",
+                }
+              : { backgroundColor: "#2d3748" }
+          } // Darker default bg
+        >
+          {wallpaperUrl && isFsButtonVisible && (
+            <Button
+              onClick={toggleFullScreen}
+              variant="outline"
+              size="icon" // Changed to icon size
+              className={`absolute top-3 right-3 z-20 transition-opacity duration-300 ${isFsButtonVisible ? "opacity-100" : "opacity-0"} ${isFullScreen ? "bg-black/50 hover:bg-black/70 text-white" : "bg-white/50 hover:bg-white/70 text-black"}`}
+              onMouseEnter={handlePlayerMouseEnter} // Keep button visible if mouse is over it
+              onMouseLeave={handlePlayerMouseLeave} // Restart timer if mouse leaves button itself
+              aria-label={isFullScreen ? "Exit Fullscreen" : "Enter Fullscreen"} // Accessibility
+            >
+              {isFullScreen ? (
+                <Minimize className="h-4 w-4" />
+              ) : (
+                <Expand className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+          {(() => {
+            if (hasAttemptedCreate && videoUrl && !wallpaperUrl) {
+              return (
+                <p className="text-red-400 z-10 p-4 bg-gray-800/90 rounded-md text-center">
+                  Unsupported video URL or format. <br /> Please use a valid
+                  YouTube, .mp4, .webm, or .ogg link.
+                </p>
+              );
+            }
+            if (wallpaperUrl) {
+              const isDirectVideo =
+                wallpaperUrl.match(/\.(mp4|webm|ogg)(\?.*)?$/i) != null;
+              if (isDirectVideo) {
+                return (
+                  <video
+                    key={wallpaperUrl + (wallpaperImage || "noimg")}
+                    width="100%"
+                    height="100%"
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    className="absolute top-0 left-0 w-full h-full object-cover z-0"
+                    style={{ opacity: playerOpacity }}
+                  >
+                    <source
+                      src={wallpaperUrl}
+                      type={`video/${wallpaperUrl.split(".").pop()?.split("?")[0]}`}
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                );
+              } else {
+                // Assumed embeddable link like YouTube or other platform that provides direct embed URL
+                return (
+                  <iframe
+                    key={wallpaperUrl + (wallpaperImage || "noimg")}
+                    width="100%"
+                    height="100%"
+                    src={wallpaperUrl}
+                    title="Wallpaper Video"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    className="absolute top-0 left-0 w-full h-full z-0"
+                    style={{ opacity: playerOpacity }}
+                  ></iframe>
+                );
+              }
+            }
+            // Default placeholder
+            return (
+              <p className="text-muted-foreground z-10">
+                Audio-Visual Wallpaper Display Area
+              </p>
+            );
+          })()}
+        </div>
+      </main>
 
-        {/* Gallery Section - Diagonal layout with perspective */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-300 via-blue-300 to-pink-300 dark:from-purple-900 dark:via-blue-900 dark:to-pink-900 animate-gradient-flow animate-morph-blob bg-[length:200%_150%] -skew-y-5 scale-75 opacity-80 dark:opacity-30 hidden md:block"></div>
-
-          <div className="relative">
-            <h2 className="text-4xl font-bold mb-10 text-center dark:text-white">
-              {t(homepageData.gallery.title)}
-              <span className="block w-20 h-1 bg-black dark:bg-white mx-auto mt-4 rounded-full"></span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-              {homepageData.gallery.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="group relative aspect-[4/3] rounded-xl overflow-hidden transform perspective-1000 hover:rotate-y-12 transition-all duration-500"
-                  style={{
-                    backgroundImage: `url(${item.imgUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }}
-                >
-                  {/* <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-blue-500/20 dark:from-purple-400/10 dark:to-blue-400/10"></div> */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-6 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <h3 className="text-white text-xl font-bold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                      {t(item.title)}
-                    </h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Blog Section */}
-        <LatestBlogs lng={lng} />
-      </div>
+      <footer className="text-center my-12 text-muted-foreground">
+        <p>
+          &copy; 2025 Cool Audio Player. Built with Next.js and TailwindCSS.
+        </p>
+      </footer>
     </div>
   );
 }

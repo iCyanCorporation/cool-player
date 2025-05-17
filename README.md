@@ -1,127 +1,179 @@
-# nextjs-amplify-cms-template
+# 🎧 Cool Audio Player
 
-A full-stack web application template built with Next.js and AWS Amplify, featuring a public website, blog system, and admin dashboard.
+**A web platform that turns any video into an immersive, visually engaging wallpaper experience.**
 
-## Features
+---
 
-- 🚀 Next.js 14+ with App Router
-- ⚡ AWS Amplify Gen2 Backend
-- 🎨 Shadcn/ui Components
-- 🌍 i18n Support
-- 📝 Rich Text Editor (Tiptap)
-- 🔒 Authentication & Authorization
-- 📱 Responsive Design
-- 🧪 Jest Testing Setup
+## 📌 Project Overview
 
-## Prerequisites
+**Cool Audio Player** is a modern web application that allows users to select a video URL (e.g., YouTube or other media sources), pair it with a visually striking image, and use the combination as an aesthetic audio-visual wallpaper.
 
-- Node.js 18.x or higher
-- AWS Account
-- npm or yarn
-- AWS Amplify CLI v12.x or higher (`npm install -g @aws-amplify/cli@latest`)
+* **Problem Solved**: Many users want a lightweight, elegant way to enjoy music or podcasts with dynamic backgrounds instead of watching videos. Cool Audio Player delivers a focused audio experience with visual customization.
+* **Target Audience**:
 
-## Getting Started
+  * Music and podcast listeners
+  * Creatives and content curators
+  * Desktop and mobile wallpaper enthusiasts
 
-1. Clone the repository
+---
+
+## 🏗 Architecture & Design Principles
+
+### 🧱 Technology Stack
+
+| Component         | Tech                      |
+| ----------------- | ------------------------- |
+| Frontend          | Next.js (App Router)      |
+| Styling           | TailwindCSS + ShadCN UI   |
+| Audio/Video Logic | Custom Hooks & HTML5 APIs |
+| Cloud Backend     | AWS Amplify Gen 2         |
+| Testing           | Jest                      |
+| Deployment        | Amplify Hosting (CI/CD)   |
+
+### 🧠 Design Decisions
+
+* **Modularity**: Code is component-driven with a focus on reusable UI and logic blocks.
+* **Scalability**: Built on Amplify Gen 2 with separation of frontend/backend for horizontal scaling.
+* **Developer Experience**: Shadcn UI and Tailwind for rapid UI development; Jest for reliable test coverage.
+* **Performance**: Minimal dependencies and lazy loading of video/audio resources to reduce load time.
+
+---
+
+## 🛠 Installation & Setup
+
+> 💡 Requirements: Node.js ≥ 18, Amplify CLI, Git
+
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/nextjs-amplify-cms-template.git
-cd nextjs-amplify-cms-template
+git clone https://github.com/your-org/cool-audio-player.git
+cd cool-audio-player
 ```
 
-2. Install dependencies
+### 2. Install Dependencies
 
 ```bash
+pnpm install
+# or
 npm install
+# or
+yarn install
 ```
 
-3. Deploy a fullstack app to AWS and Initialize and deploy backend (Amplify Gen2)
+### 3. Initialize ShadCN UI (if first-time setup)
 
-- Follow [Quick Start Guide](https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/)
+```bash
+npx shadcn@latest init
+```
 
-4. Start the development server
+### 4. Amplify Gen 2 Setup
+
+```bash
+amplify pull --appId <your-app-id> --envName dev
+```
+
+> Configure your backend environment from the Amplify Console or CLI as needed.
+
+### 5. Create `.env.local`
+
+```dotenv
+NEXT_PUBLIC_API_URL=https://your-api-endpoint.com
+AMPLIFY_PROJECT_ID=your-amplify-id
+```
+
+---
+
+## ▶️ Usage Guidelines
+
+### Run Development Server
 
 ```bash
 npm run dev
 ```
 
-## Project Structure
+Access at: `http://localhost:3000`
 
-```
-nextjs-amplify-cms-template/
-├── app/                # Next.js app router pages
-├── amplify/           # Amplify Gen2 backend configuration
-│   ├── backend/       # Backend resources definitions
-│   ├── data/         # GraphQL schema and resolvers
-│   └── auth/         # Authentication configuration
-├── components/        # Reusable React components
-├── lib/              # Utility functions and configurations
-├── public/           # Static assets
-└── styles/           # Global styles
+### Build for Production
+
+```bash
+npm run build
+npm start
 ```
 
-## Backend Development (Amplify Gen2)
-
-note...
-
-## Testing
-
-Run the test suite:
+### Run Tests
 
 ```bash
 npm run test
 ```
 
-Watch mode for development:
+---
 
-```bash
-npm run test:watch
+## 🧬 Code & Folder Structure
+
+```
+cool-audio-player/
+├── app/                   # Next.js app routes
+│   ├── page.tsx          # Home route
+│   └── api/              # API routes if any
+├── components/           # Shared React components
+├── lib/                  # Utilities, helpers
+├── hooks/                # Custom hooks (e.g., useAudioPlayer)
+├── public/               # Static files (e.g., default images)
+├── styles/               # Tailwind config and global CSS
+├── tests/                # Jest test files
+├── amplify/              # Amplify backend config
+├── .env.local.example    # Environment variable template
+└── README.md
 ```
 
-## Deployment
+### Naming & Conventions
 
-1. Build the application:
+* **File Naming**: `camelCase` for files, `PascalCase` for React components.
+* **Code Formatting**: Prettier + ESLint (included in `devDependencies`)
+* **Components**: Co-located with styles/test files where appropriate
 
-```bash
-npm run build
-```
+---
 
-2. Deploy to AWS Amplify:
+## 🤝 Contribution & Collaboration
 
-- Deploy cloud sandbox
+We welcome contributions from the community!
 
-```bash
-npx ampx sandbox
-```
+### Branching Model
 
-- Upload your code to Github
+* `main`: Production-ready code
+* `dev`: Active development
+* Feature branches: `feature/xyz`, `bugfix/abc`
 
-## Using as a Template
-
-1. Fork this repository
-2. Update the configuration files
-3. Customize the components and styles
-4. Update the content and branding
-
-## Contributing
+### Pull Request Process
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a new branch from `dev`
+3. Commit changes with clear messages
+4. Ensure tests pass
+5. Open a Pull Request with context and screenshots
 
-## License
+### Code Review
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+* Follow project code style
+* Avoid breaking existing functionality
+* Keep changes focused and minimal
 
-## Acknowledgments
+### Reporting Issues & Requesting Features
 
-- [Next.js](https://nextjs.org/)
-- [AWS Amplify(NextJS)](https://docs.amplify.aws/nextjs/start/)
-- [Shadcn/ui](https://ui.shadcn.com/)
-- [TipTap](https://tiptap.dev/)
+* File issues under [GitHub Issues](https://github.com/your-org/cool-audio-player/issues)
+* Use labels like `bug`, `enhancement`, `question`
 
-## Support
+---
 
-If you find this project helpful, please give it a ⭐️ on GitHub!
+## 📄 Licensing & Contact Information
+
+### License
+
+MIT License
+© 2025 \[Your Organization or Name]
+
+### Maintainers
+
+* [GitHub](https://github.com/iCyanCorporation) | [Email](mailto:you@example.com)
+
+For support or inquiries, please open an issue or contact us directly.

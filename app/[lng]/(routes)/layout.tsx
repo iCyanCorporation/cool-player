@@ -22,9 +22,9 @@ export default async function ContentLayout({
       <div className="relative min-h-screen w-full flex flex-col">
         <AnimatedBackground />
         <div className="relative z-10 m-auto w-full flex flex-col min-h-screen">
-          <Header lng={lng} />
+          {/* <Header lng={lng} /> */}
           <main className="flex-1 w-full m-auto">{children}</main>
-          <Footer />
+          {/* <Footer /> */}
         </div>
       </div>
     </ThemeProvider>
