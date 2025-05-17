@@ -1,5 +1,3 @@
-import Header from "@/components/custom/Header";
-import Footer from "@/components/custom/Footer";
 import AnimatedBackground from "@/components/custom/AnimatedBackground";
 import { ThemeProvider } from "@/components/common/theme-provider";
 
