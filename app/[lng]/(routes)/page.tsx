@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Expand, Minimize } from "lucide-react";
 
 export default function HomePage() {
@@ -16,6 +18,7 @@ export default function HomePage() {
   const [isFsButtonVisible, setIsFsButtonVisible] = useState(false);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const hideButtonTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const convertToEmbedUrl = (url: string): string => {
     if (!url) return "";
@@ -98,7 +101,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 flex flex-col min-h-screen">
       <header className="text-center my-8">
         <h1 className="text-4xl font-bold">🎧 Cool Audio Player</h1>
         <p className="text-xl text-muted-foreground mt-2">
@@ -107,44 +110,70 @@ export default function HomePage() {
         </p>
       </header>
 
-      <main className="flex flex-col items-center gap-8">
-        {/* Placeholder for Video URL Input */}
-        <div className="w-full max-w-md p-6 border rounded-lg shadow-md">
-          <h2 className="text-2xl font-semibold mb-4">1. Enter Video URL</h2>
-          <input
-            type="text"
-            placeholder="e.g., YouTube, Vimeo, .mp4, .webm"
-            className="w-full p-2 border rounded mb-4"
-            value={videoUrl}
-            onChange={(e) => {
-              setVideoUrl(e.target.value);
-              setHasAttemptedCreate(false); // Reset attempt status on new input
-            }}
-          />
-          {/* Placeholder for Image Selection */}
-          <h2 className="text-2xl font-semibold mb-4 mt-6">
-            2. Select Background Image
-          </h2>
-          <input
-            type="file"
-            accept="image/*"
-            className="w-full p-2 border rounded"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                setImageFile(e.target.files[0]);
-              } else {
-                setImageFile(null);
-              }
-              setHasAttemptedCreate(false); // Reset attempt status
-            }}
-          />
-          <button
-            className="mt-6 w-full bg-primary text-primary-foreground p-2 rounded hover:bg-primary/90"
+      <main className="flex flex-col md:flex-row items-start md:items-center justify-center gap-8 flex-grow">
+        {" "}
+        {/* Changed items-center to items-start for md */}
+        {/* Input Controls Panel */}
+        <div className="w-full max-w-md p-6 border rounded-lg shadow-md space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="videoUrl" className="text-xl font-semibold">
+              1. Enter Video URL
+            </Label>
+            <Input
+              id="videoUrl"
+              type="text"
+              placeholder="e.g., YouTube, Vimeo, .mp4, .webm"
+              value={videoUrl}
+              onChange={(e) => {
+                setVideoUrl(e.target.value);
+                setHasAttemptedCreate(false);
+              }}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="imageFileButton" className="text-xl font-semibold">
+              2. Select Background Image
+            </Label>
+            <div className="flex items-center gap-3">
+              <Button
+                id="imageFileButton"
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-shrink-0"
+              >
+                Choose File
+              </Button>
+              <span className="text-sm text-muted-foreground truncate flex-grow min-w-0">
+                {imageFile ? imageFile.name : "No file selected"}
+              </span>
+            </div>
+            <Input
+              ref={fileInputRef}
+              id="imageFileHidden" // Added id for potential label association if needed elsewhere
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setImageFile(e.target.files[0]);
+                } else {
+                  setImageFile(null);
+                }
+                setHasAttemptedCreate(false);
+              }}
+            />
+          </div>
+
+          <Button
+            className="w-full" // Added pt-6 for more space above this button
             onClick={handleCreateWallpaper}
-            disabled={!videoUrl} // Optionally disable if no URL
+            disabled={!videoUrl}
           >
             Create Wallpaper
-          </button>
+          </Button>
           <div className="mt-6">
             <label
               htmlFor="opacity-slider"
@@ -164,11 +193,10 @@ export default function HomePage() {
             />
           </div>
         </div>
-
         {/* Player Display */}
         <div
           ref={playerContainerRef}
-          className={`border rounded-lg shadow-md bg-muted overflow-hidden ${isFullScreen ? "fixed inset-0 z-50 w-screen h-screen max-w-none p-0" : "w-full max-w-2xl aspect-video flex items-center justify-center p-6 relative"}`}
+          className={`border rounded-lg shadow-md bg-muted overflow-hidden ${isFullScreen ? "fixed inset-0 z-50 w-screen h-screen max-w-none" : "w-full max-w-2xl aspect-video flex items-center justify-center relative"}`}
           onMouseEnter={handlePlayerMouseEnter}
           onMouseLeave={handlePlayerMouseLeave}
           style={
@@ -202,7 +230,7 @@ export default function HomePage() {
           {(() => {
             if (hasAttemptedCreate && videoUrl && !wallpaperUrl) {
               return (
-                <p className="text-red-400 z-10 p-4 bg-gray-800/90 rounded-md text-center">
+                <p className="text-red-400 z-10 bg-gray-800/90 rounded-md text-center">
                   Unsupported video URL or format. <br /> Please use a valid
                   YouTube, .mp4, .webm, or .ogg link.
                 </p>
