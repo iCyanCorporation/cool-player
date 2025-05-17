@@ -8,12 +8,12 @@
 
 **Cool Audio Player** is a modern web application that allows users to select a video URL (e.g., YouTube or other media sources), pair it with a visually striking image, and use the combination as an aesthetic audio-visual wallpaper.
 
-* **Problem Solved**: Many users want a lightweight, elegant way to enjoy music or podcasts with dynamic backgrounds instead of watching videos. Cool Audio Player delivers a focused audio experience with visual customization.
-* **Target Audience**:
+- **Problem Solved**: Many users want a lightweight, elegant way to enjoy music or podcasts with dynamic backgrounds instead of watching videos. Cool Audio Player delivers a focused audio experience with visual customization.
+- **Target Audience**:
 
-  * Music and podcast listeners
-  * Creatives and content curators
-  * Desktop and mobile wallpaper enthusiasts
+  - Music and podcast listeners
+  - Creatives and content curators
+  - Desktop and mobile wallpaper enthusiasts
 
 ---
 
@@ -32,10 +32,10 @@
 
 ### 🧠 Design Decisions
 
-* **Modularity**: Code is component-driven with a focus on reusable UI and logic blocks.
-* **Scalability**: Built on Amplify Gen 2 with separation of frontend/backend for horizontal scaling.
-* **Developer Experience**: Shadcn UI and Tailwind for rapid UI development; Jest for reliable test coverage.
-* **Performance**: Minimal dependencies and lazy loading of video/audio resources to reduce load time.
+- **Modularity**: Code is component-driven with a focus on reusable UI and logic blocks.
+- **Scalability**: Built on Amplify Gen 2 with separation of frontend/backend for horizontal scaling.
+- **Developer Experience**: Shadcn UI and Tailwind for rapid UI development; Jest for reliable test coverage.
+- **Performance**: Minimal dependencies and lazy loading of video/audio resources to reduce load time.
 
 ---
 
@@ -68,11 +68,9 @@ npx shadcn@latest init
 
 ### 4. Amplify Gen 2 Setup
 
-```bash
-amplify pull --appId <your-app-id> --envName dev
-```
+Deploy on Amplify
 
-> Configure your backend environment from the Amplify Console or CLI as needed.
+> This will build your Amplify Gen 2 backend and generate the `amplify_outputs.json` file required for your app.
 
 ### 5. Create `.env.local`
 
@@ -113,24 +111,26 @@ npm run test
 ```
 cool-audio-player/
 ├── app/                   # Next.js app routes
-│   ├── page.tsx          # Home route
-│   └── api/              # API routes if any
-├── components/           # Shared React components
-├── lib/                  # Utilities, helpers
-├── hooks/                # Custom hooks (e.g., useAudioPlayer)
-├── public/               # Static files (e.g., default images)
-├── styles/               # Tailwind config and global CSS
-├── tests/                # Jest test files
-├── amplify/              # Amplify backend config
-├── .env.local.example    # Environment variable template
+│   ├── [lng]/             # Internationalized routes (language folders)
+│   │   └── (routes)/      # Route group for localized pages
+│   │       └── page.tsx   # Home route
+│   └── api/               # API routes if any
+├── components/            # Shared React components
+├── lib/                   # Utilities, helpers
+├── hooks/                 # Custom hooks (e.g., useAudioPlayer)
+├── public/                # Static files (e.g., default images)
+├── styles/                # Tailwind config and global CSS
+├── tests/                 # Jest test files
+├── amplify/               # Amplify backend config
+├── .env.local.example     # Environment variable template
 └── README.md
 ```
 
 ### Naming & Conventions
 
-* **File Naming**: `camelCase` for files, `PascalCase` for React components.
-* **Code Formatting**: Prettier + ESLint (included in `devDependencies`)
-* **Components**: Co-located with styles/test files where appropriate
+- **File Naming**: `camelCase` for files, `PascalCase` for React components.
+- **Code Formatting**: Prettier + ESLint (included in `devDependencies`)
+- **Components**: Co-located with styles/test files where appropriate
 
 ---
 
@@ -140,9 +140,9 @@ We welcome contributions from the community!
 
 ### Branching Model
 
-* `main`: Production-ready code
-* `dev`: Active development
-* Feature branches: `feature/xyz`, `bugfix/abc`
+- `main`: Production-ready code
+- `dev`: Active development
+- Feature branches: `feature/xyz`, `bugfix/abc`
 
 ### Pull Request Process
 
@@ -154,14 +154,14 @@ We welcome contributions from the community!
 
 ### Code Review
 
-* Follow project code style
-* Avoid breaking existing functionality
-* Keep changes focused and minimal
+- Follow project code style
+- Avoid breaking existing functionality
+- Keep changes focused and minimal
 
 ### Reporting Issues & Requesting Features
 
-* File issues under [GitHub Issues](https://github.com/your-org/cool-audio-player/issues)
-* Use labels like `bug`, `enhancement`, `question`
+- File issues under [GitHub Issues](https://github.com/your-org/cool-audio-player/issues)
+- Use labels like `bug`, `enhancement`, `question`
 
 ---
 
@@ -174,6 +174,6 @@ MIT License
 
 ### Maintainers
 
-* [GitHub](https://github.com/iCyanCorporation) | [Email](mailto:you@example.com)
+- [GitHub](https://github.com/iCyanCorporation) | [Email](mailto:you@example.com)
 
 For support or inquiries, please open an issue or contact us directly.
